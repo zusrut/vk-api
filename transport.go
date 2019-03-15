@@ -124,16 +124,29 @@ func (api *APIClient) Do(request Request) (response *Response, error *Error) {
 // HTTP translates the Request in *http.Request.
 func (r Request) HTTP() (req *http.Request) {
 	values := r.Values
+	method := defaultMethod
+
 
 	if r.Token != "" {
 		values.Set(paramToken, r.Token)
+	}
+
+	var body = strings.NewReader("")
+
+	if _, ok := values["code"]; ok {
+		method = http.MethodPost
+		u2 := ApiURL()
+		u2.Path = path.Join(u2.Path, r.Method)
+		u2.RawQuery = values.Encode()
+		body = strings.NewReader(u2.String())
+		delete(values, "code")
 	}
 
 	u := ApiURL()
 	u.Path = path.Join(u.Path, r.Method)
 	u.RawQuery = values.Encode()
 
-	req, err := http.NewRequest(defaultMethod, u.String(), nil)
+	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
 		panic(err)
 	}
