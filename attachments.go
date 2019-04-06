@@ -195,23 +195,23 @@ func (client *Client) AddAttachmentPhoto(file interface{}) string {
 	return fmt.Sprintf("photo%d_%d", photo.OwnerID, photo.ID)
 }
 
-func (client *Client) AddAttachmentDoc(fieldName string, peerID int64, title string, file interface{}) string {
+func (client *Client) AddAttachmentDoc(fieldName string, peerID int64, title string, file interface{}) (string, error) {
 	server, err := client.GetMessagesUploadServerForDoc(fieldName, peerID)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	res, err := client.UploadFile(server.UploadURL, "file", file)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	doc, err := client.SaveMessagesDoc(res.File, title)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return fmt.Sprintf("doc%d_%d", doc.OwnerID, doc.ID)
+	return fmt.Sprintf("doc%d_%d", doc.OwnerID, doc.ID), nil
 }
 
 func (client *Client) SendPhoto(dst Destination, file interface{}) (int64, *Error) {
@@ -224,9 +224,10 @@ func (client *Client) SendPhoto(dst Destination, file interface{}) (int64, *Erro
 }
 
 func (client *Client) SendDoc(dst Destination, title string, file interface{}) (int64, *Error) {
+	attach,_ := client.AddAttachmentDoc("doc", dst.GetPeerID(), title, file)
 	config := MessageConfig{
 		Destination: dst,
-		Attachment:  client.AddAttachmentDoc("doc", dst.GetPeerID(), title, file),
+		Attachment: attach,
 	}
 
 	return client.SendMessage(config)
