@@ -176,23 +176,23 @@ func (v *Video) GetMaxPreview() string {
 	return ""
 }
 
-func (client *Client) AddAttachmentPhoto(file interface{}) string {
+func (client *Client) AddAttachmentPhoto(file interface{}) (string, error) {
 	server, err := client.GetMessagesUploadServerForPhoto()
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	res, err := client.UploadFile(server.UploadURL, "photo", file)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	photo, err := client.SaveMessagesPhoto(res)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return fmt.Sprintf("photo%d_%d", photo.OwnerID, photo.ID)
+	return fmt.Sprintf("photo%d_%d", photo.OwnerID, photo.ID), nil
 }
 
 func (client *Client) AddAttachmentDoc(fieldName string, peerID int64, title string, file interface{}) (string, error) {
@@ -215,19 +215,20 @@ func (client *Client) AddAttachmentDoc(fieldName string, peerID int64, title str
 }
 
 func (client *Client) SendPhoto(dst Destination, file interface{}) (int64, *Error) {
+	att, _ := client.AddAttachmentPhoto(file)
 	config := MessageConfig{
 		Destination: dst,
-		Attachment:  client.AddAttachmentPhoto(file),
+		Attachment:  att,
 	}
 
 	return client.SendMessage(config)
 }
 
 func (client *Client) SendDoc(dst Destination, title string, file interface{}) (int64, *Error) {
-	attach,_ := client.AddAttachmentDoc("doc", dst.GetPeerID(), title, file)
+	attach, _ := client.AddAttachmentDoc("doc", dst.GetPeerID(), title, file)
 	config := MessageConfig{
 		Destination: dst,
-		Attachment: attach,
+		Attachment:  attach,
 	}
 
 	return client.SendMessage(config)
