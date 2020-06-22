@@ -8,11 +8,12 @@ import (
 )
 
 const (
-	defaultVersion = "5.67"
-	defaultScheme  = "https"
-	defaultHost    = "api.vk.com"
-	defaultPath    = "method"
-	defaultMethod  = "GET"
+	defaultVersion    = "5.67"
+	newDefaultVersion = "5.110"
+	defaultScheme     = "https"
+	defaultHost       = "api.vk.com"
+	defaultPath       = "method"
+	defaultMethod     = "GET"
 
 	defaultHTTPS    = "1"
 	defaultLanguage = LangEN
@@ -100,7 +101,7 @@ func (api *APIClient) Authenticate(application Application) (err error) {
 func NewApiClient() *APIClient {
 	client := &APIClient{
 		httpClient: defaultHTTPClient(),
-		APIVersion: defaultVersion,
+		APIVersion: newDefaultVersion,
 		logger:     log.New(os.Stdout, "", log.LstdFlags),
 		HTTPS:      defaultHTTPS,
 		Language:   defaultLanguage,
