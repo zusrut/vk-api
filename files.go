@@ -6,6 +6,7 @@ import (
 	"github.com/technoweenie/multipartstreamer"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -42,12 +43,14 @@ func (client *Client) UploadFile(url string, fieldName string, file interface{})
 	case string:
 		fileHandle, err := os.Open(f)
 		if err != nil {
+			log.Printf("%+v", err)
 			return ServerResponse{}, NewError(ErrBadCode, err.Error())
 		}
 		defer fileHandle.Close()
 
 		fi, err := os.Stat(f)
 		if err != nil {
+			log.Printf("%+v", err)
 			return ServerResponse{}, NewError(ErrBadCode, err.Error())
 		}
 
@@ -64,6 +67,7 @@ func (client *Client) UploadFile(url string, fieldName string, file interface{})
 
 		data, err := ioutil.ReadAll(f.Reader)
 		if err != nil {
+			log.Printf("%+v", err)
 			return ServerResponse{}, NewError(ErrBadCode, err.Error())
 		}
 
@@ -76,6 +80,7 @@ func (client *Client) UploadFile(url string, fieldName string, file interface{})
 
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
+		log.Printf("%+v", err)
 		return ServerResponse{}, NewError(ErrBadCode, err.Error())
 	}
 
@@ -83,18 +88,21 @@ func (client *Client) UploadFile(url string, fieldName string, file interface{})
 
 	res, err := client.apiClient.httpClient.Do(req)
 	if err != nil {
+		log.Printf("%+v", res)
 		return ServerResponse{}, NewError(ErrBadCode, err.Error())
 	}
 	defer res.Body.Close()
 
 	bytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		log.Printf("%+v", string(bytes))
 		return ServerResponse{}, NewError(ErrBadCode, err.Error())
 	}
 	client.apiClient.logPrintf("upload %s: %s", fieldName, string(bytes))
 
 	response := ServerResponse{}
 	if err := json.Unmarshal(bytes, &response); err != nil {
+		log.Printf("%+v", string(bytes))
 		return ServerResponse{}, NewError(ErrBadCode, err.Error())
 	}
 
@@ -131,10 +139,12 @@ func (client *Client) GetMessagesUploadServerForDoc(fiendName string, peerID int
 
 	res, err := client.Do(NewRequest("docs.getMessagesUploadServer", "", values))
 	if err != nil {
+		log.Printf("%+v", res)
 		return UploadServer{}, err
 	}
 
 	if err := res.To(&server); err != nil {
+		log.Printf("%+v", res)
 		return UploadServer{}, NewError(ErrBadCode, err.Error())
 	}
 
@@ -148,15 +158,37 @@ func (client *Client) SaveMessagesDoc(file string, title string) (Document, *Err
 
 	res, err := client.Do(NewRequest("docs.save", "", values))
 	if err != nil {
+		log.Printf("%+v", err)
 		return Document{}, err
 	}
 
 	var doc []Document
 	if err := res.To(&doc); err != nil {
+		log.Printf("%+v", err)
 		return Document{}, NewError(ErrBadCode, err.Error())
 	}
 
 	return doc[0], nil
+}
+
+func (client *Client) SaveMessagesDocNew(file string, title string) (VoiceMessage, *Error) {
+	values := url.Values{}
+	values.Set("file", file)
+	values.Set("title", title)
+
+	res, err := client.Do(NewRequest("docs.save", "", values))
+	if err != nil {
+		log.Printf("%+v", err)
+		return VoiceMessage{}, err
+	}
+
+	var doc VoiceMessage
+	if err := res.To(&doc); err != nil {
+		log.Printf("%+v", err)
+		return VoiceMessage{}, NewError(ErrBadCode, err.Error())
+	}
+
+	return doc, nil
 }
 
 func (client *Client) SaveMessagesPhoto(response ServerResponse) (Photo, *Error) {

@@ -1,6 +1,9 @@
 package vkapi
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 type Attachment struct {
 	Type      string    `json:"type"`
@@ -91,6 +94,19 @@ type Document struct {
 		Graffiti *Graffiti `json:"graffiti"`
 		AudioMsg *AudioMsg `json:"audio_msg"`
 	} `json:"preview"`
+}
+
+type VoiceMessage struct {
+	Type         string `json:"type"`
+	AudioMessage struct {
+		ID        int64  `json:"id"`
+		OwnerID   int64  `json:"owner_id"`
+		Duration  int    `json:"duration"`
+		Waveform  []int  `json:"waveform"`
+		LinkOgg   string `json:"link_ogg"`
+		LinkOp3   string `json:"link_mp3"`
+		AccessKey string `json:"access_key"`
+	} `json:"audio_message"`
 }
 
 func (doc *Document) IsTxt() bool {
@@ -203,15 +219,27 @@ func (client *Client) AddAttachmentDoc(fieldName string, peerID int64, title str
 
 	res, err := client.UploadFile(server.UploadURL, "file", file)
 	if err != nil {
+		log.Printf("%+v", res)
 		return "", err
 	}
 
-	doc, err := client.SaveMessagesDoc(res.File, title)
-	if err != nil {
-		return "", err
-	}
+	if client.apiClient.APIVersion == DefaultVersion {
+		doc, err := client.SaveMessagesDoc(res.File, title)
+		if err != nil {
+			log.Printf("%+v", doc)
+			return "", err
+		}
 
-	return fmt.Sprintf("doc%d_%d", doc.OwnerID, doc.ID), nil
+		return fmt.Sprintf("doc%d_%d", doc.OwnerID, doc.ID), nil
+	} else {
+		doc, err := client.SaveMessagesDocNew(res.File, title)
+		if err != nil {
+			log.Printf("%+v", doc)
+			return "", err
+		}
+
+		return fmt.Sprintf("doc%d_%d", doc.AudioMessage.OwnerID, doc.AudioMessage.ID), nil
+	}
 }
 
 func (client *Client) SendPhoto(dst Destination, file interface{}) (int64, *Error) {

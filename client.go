@@ -79,6 +79,14 @@ func NewClientFromToken(token string) (client *Client, err error) {
 	return
 }
 
+// NewClientFromToken creates a new *Client instance.
+func NewClientFromToken2(token string) (client *Client, err error) {
+	client = new(Client)
+	client.apiClient = NewApiClient2()
+	client.apiClient.SetAccessToken(token)
+	return
+}
+
 // NewClientFromLogin creates a new *Client instance
 // and allows you to pass a authentication.
 func NewClientFromLogin(username string, password string, scope int64) (client *Client, err error) {
