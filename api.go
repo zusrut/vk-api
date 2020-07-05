@@ -111,7 +111,7 @@ func NewApiClient() *APIClient {
 }
 
 // NewApiClient creates a new *APIClient instance.
-func NewApiClient2() *APIClient {
+func NewApiClientNew() *APIClient {
 	client := &APIClient{
 		httpClient: defaultHTTPClient(),
 		APIVersion: NewDefaultVersion,

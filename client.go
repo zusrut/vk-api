@@ -80,9 +80,9 @@ func NewClientFromToken(token string) (client *Client, err error) {
 }
 
 // NewClientFromToken creates a new *Client instance.
-func NewClientFromToken2(token string) (client *Client, err error) {
+func NewClientFromTokenNew(token string) (client *Client, err error) {
 	client = new(Client)
-	client.apiClient = NewApiClient2()
+	client.apiClient = NewApiClientNew()
 	client.apiClient.SetAccessToken(token)
 	return
 }
